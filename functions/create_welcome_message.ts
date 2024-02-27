@@ -3,8 +3,6 @@ import { SlackAPIClient } from "deno-slack-sdk/types.ts";
 
 import { SendWelcomeMessageWorkflow } from "../workflows/send_welcome_message.ts";
 import { WelcomeMessageDatastore } from "../datastores/messages.ts";
-import { TriggerEventTypes } from "deno-slack-api/mod.ts";
-import { TriggerTypes } from "deno-slack-api/mod.ts";
 
 /**
  * This custom function will take the initial form input, store it
@@ -94,8 +92,7 @@ export async function findUserJoinedChannelTrigger(
     (trigger) =>
       trigger.workflow.callback_id ===
         SendWelcomeMessageWorkflow.definition.callback_id &&
-      //? Is this the right spot??
-      trigger.event_type === TriggerEventTypes.ReactionAdded &&
+      trigger.event_type === "slack#/events/user_joined_channel" &&
       trigger.channel_ids.includes(channel)
   );
 
@@ -112,24 +109,16 @@ export async function saveUserJoinedChannelTrigger(
   client: SlackAPIClient,
   channel: string
 ): Promise<{ ok: boolean; error?: string }> {
-  console.log("{{data.reaction}}");
   const triggerResponse = await client.workflows.triggers.create<
     typeof SendWelcomeMessageWorkflow.definition
   >({
-    type: TriggerTypes.Event,
-    name: "Emoji reaction",
-    description: "Send a message when a user reacts to a message with an emoji",
+    type: "event",
+    name: "User joined channel",
+    description: "Send a message when a user joins the channel",
     workflow: `#/workflows/${SendWelcomeMessageWorkflow.definition.callback_id}`,
     event: {
-      //   event_type: "slack#/events/user_joined_channel",
-      event_type: TriggerEventTypes.ReactionAdded,
+      event_type: "slack#/events/user_joined_channel",
       channel_ids: [channel],
-      filter: {
-        version: 1,
-        root: {
-          statement: "{{data.reaction}} == eyes",
-        },
-      },
     },
     inputs: {
       channel: { value: channel },

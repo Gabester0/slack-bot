@@ -21,10 +21,6 @@ export const SendWelcomeMessageFunction = DefineFunction({
         type: Schema.slack.types.user_id,
         description: "User that triggered the event",
       },
-      reaction: {
-        type: Schema.slack.types.message_context,
-        description: "Emoji reaction",
-      },
     },
     required: ["channel", "triggered_user"],
   },
